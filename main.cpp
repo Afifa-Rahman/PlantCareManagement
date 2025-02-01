@@ -1,8 +1,9 @@
-
 #include <iostream>
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -18,6 +19,50 @@ struct Plant {
 
 // Global vector to store all plants
 vector<Plant> plantDatabase;
+
+// Function to save plant data to a file
+void saveToFile() {
+    ofstream outFile("plants.txt");
+    if (!outFile) {
+        cout << "Error: Could not open file for writing!\n";
+        return;
+    }
+    for (const auto& plant : plantDatabase) {
+        outFile << plant.name << ","
+                << plant.type << ","
+                << plant.sunlightNeeds << ","
+                << plant.wateringFrequency << ","
+                << plant.lastWatered << ","
+                << plant.lastFertilized << endl;
+    }
+    outFile.close();
+}
+
+// Function to load plant data from a file
+void loadFromFile() {
+    ifstream inFile("plants.txt");
+    if (!inFile) {
+        cout << "No existing plant data found.\n";
+        return;
+    }
+
+    plantDatabase.clear();
+    Plant plant;
+    string line;
+
+    while (getline(inFile, line)) {
+        stringstream ss(line);
+        getline(ss, plant.name, ',');
+        getline(ss, plant.type, ',');
+        getline(ss, plant.sunlightNeeds, ',');
+        ss >> plant.wateringFrequency;
+        ss.ignore();
+        getline(ss, plant.lastWatered, ',');
+        getline(ss, plant.lastFertilized, ',');
+        plantDatabase.push_back(plant);
+    }
+    inFile.close();
+}
 
 // Function to add a new plant
 void addPlant() {
@@ -38,6 +83,7 @@ void addPlant() {
     getline(cin, plant.lastFertilized);
 
     plantDatabase.push_back(plant);
+    saveToFile(); // Save data after adding a plant
     cout << "Plant added successfully!\n";
 }
 
@@ -83,6 +129,7 @@ void logMaintenance() {
             cout << "Enter new last fertilizing date (YYYY-MM-DD): ";
             getline(cin, date);
             plant.lastFertilized = date;
+            saveToFile(); // Save updated data
             cout << "Maintenance log updated successfully!\n";
             break;
         }
@@ -124,8 +171,9 @@ void displayMenu() {
 }
 
 int main() {
-    int choice;
+    loadFromFile(); // Load previous data
 
+    int choice;
     do {
         displayMenu();
         cin >> choice;
